@@ -1,7 +1,7 @@
 use tauri::{
     menu::{Menu, MenuBuilder, MenuEvent, MenuItem},
     tray::{TrayIcon, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Manager,
+    window, AppHandle, Emitter, Manager,
 };
 
 pub fn setup_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
@@ -21,11 +21,16 @@ pub fn setup_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>
 }
 
 fn get_menu(app: &tauri::App) -> Result<Menu<tauri::Wry>, Box<dyn std::error::Error>> {
-    let stop = MenuItem::with_id(app, "stop", "Stop", true, None::<&str>)?;
+    let stop = MenuItem::with_id(
+        app,
+        "stop_monitoring",
+        "Stop Monitoring",
+        true,
+        None::<&str>,
+    )?;
     let quit = MenuItem::with_id(app, "quit", "Quit App", true, None::<&str>)?;
 
     let menu = MenuBuilder::new(app)
-        .text("msg", "Stop Task Monitoring")
         .item(&stop)
         .separator()
         .item(&quit)
@@ -36,9 +41,10 @@ fn get_menu(app: &tauri::App) -> Result<Menu<tauri::Wry>, Box<dyn std::error::Er
 
 fn get_menu_event_handler() -> impl Fn(&AppHandle, MenuEvent) {
     |app: &AppHandle, event: MenuEvent| match event.id.as_ref() {
-        "stop" => {
+        "stop_monitoring" => {
             println!("Stop is clicked");
             if let Some(window) = app.get_webview_window("main") {
+                let _ = window.emit("stop_task_monitoring", ());
                 let _ = window.show();
                 let _ = window.set_focus();
             }
