@@ -9,7 +9,7 @@ use tauri::{Manager, State};
 use crate::{EventSender, InputEvent, ModifierState};
 
 #[tauri::command]
-pub fn stop_task_monitoring(
+pub fn stop_monitoring(
     event_sender: State<'_, EventSender>,
     modifier_state: State<'_, ModifierState>,
 ) {
@@ -18,7 +18,7 @@ pub fn stop_task_monitoring(
 }
 
 #[tauri::command(async)]
-pub async fn start_task_monitoring(
+pub async fn start_monitoring(
     app: tauri::AppHandle,
     event_sender: State<'_, EventSender>,
     modifier_state: State<'_, ModifierState>,
@@ -49,34 +49,21 @@ pub async fn start_task_monitoring(
             };
 
             let input_event = match event.event_type {
-                EventType::MouseMove { x, y } => {
-                    if event
+                EventType::MouseMove { x, y } => Some(InputEvent {
+                    event_type: "mouse_move".to_string(),
+                    x: Some(x),
+                    y: Some(y),
+                    key: None,
+                    button: None,
+                    modifiers: modifiers.clone(),
+                    active_app: None,
+                    active_window_title: None,
+                    timestamp: event
                         .time
                         .duration_since(std::time::UNIX_EPOCH)
                         .unwrap()
-                        .as_millis()
-                        % 100
-                        == 0
-                    {
-                        Some(InputEvent {
-                            event_type: "mouse_move".to_string(),
-                            x: Some(x),
-                            y: Some(y),
-                            key: None,
-                            button: None,
-                            modifiers: modifiers.clone(),
-                            active_app: None,
-                            active_window_title: None,
-                            timestamp: event
-                                .time
-                                .duration_since(std::time::UNIX_EPOCH)
-                                .unwrap()
-                                .as_millis(),
-                        })
-                    } else {
-                        None
-                    }
-                }
+                        .as_millis(),
+                }),
                 EventType::ButtonPress(button) => Some(InputEvent {
                     event_type: "mouse_press".to_string(),
                     x: None,

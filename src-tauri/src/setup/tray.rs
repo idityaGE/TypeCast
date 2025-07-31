@@ -1,7 +1,7 @@
 use tauri::{
     menu::{Menu, MenuBuilder, MenuEvent, MenuItem},
     tray::{TrayIcon, TrayIconBuilder, TrayIconEvent},
-    window, AppHandle, Emitter, Manager,
+    AppHandle, Emitter, Manager,
 };
 
 pub fn setup_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
@@ -44,7 +44,7 @@ fn get_menu_event_handler() -> impl Fn(&AppHandle, MenuEvent) {
         "stop_monitoring" => {
             println!("Stop is clicked");
             if let Some(window) = app.get_webview_window("main") {
-                let _ = window.emit("stop_task_monitoring", ());
+                let _ = window.emit("stop_monitoring", ());
                 let _ = window.show();
                 let _ = window.set_focus();
             }

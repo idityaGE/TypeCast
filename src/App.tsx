@@ -10,7 +10,7 @@ function App() {
 
   const startMonitoring = async () => {
     try {
-      const response = await invoke("start_task_monitoring");
+      const response = await invoke("start_monitoring");
       console.log("Monitoring started successfully:", response);
 
       if (!isListening) {
@@ -24,9 +24,9 @@ function App() {
   }
 
   const listenForStopMonitoring = async () => {
-    const unlistenFn = await listen("stop_task_monitoring", () => {
+    const unlistenFn = await listen("stop_monitoring", () => {
       console.log("Received stop monitoring event:");
-      const response = invoke("stop_task_monitoring");
+      const response = invoke("stop_monitoring");
       console.log("Monitoring stopped successfully:", response);
     });
     return unlistenFn;

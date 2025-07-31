@@ -38,8 +38,8 @@ pub fn run() {
         .setup(setup_handler)
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
-            start_task_monitoring,
-            stop_task_monitoring
+            start_monitoring,
+            stop_monitoring
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
