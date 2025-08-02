@@ -22,11 +22,11 @@
 }
 
 .container {
-  margin: 0;
-  padding-top: 10vh;
+  margin: 0 auto;
+  padding: 2rem;
+  max-width: 1200px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   text-align: center;
 }
 
@@ -58,6 +58,78 @@ a:hover {
 
 h1 {
   text-align: center;
+  margin-bottom: 2rem;
+}
+
+.monitoring-controls {
+  margin-bottom: 2rem;
+}
+
+.results-container {
+  text-align: left;
+  margin-top: 2rem;
+  border-top: 1px solid #ccc;
+  padding-top: 2rem;
+}
+
+.summary {
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+}
+
+.event-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.event-count {
+  padding: 0.5rem 1rem;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.event-type {
+  font-weight: bold;
+  margin-right: 0.5rem;
+}
+
+.count {
+  font-size: 1.1em;
+  color: #0066cc;
+}
+
+.events-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.events-table th, 
+.events-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+.events-table th {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+
+.events-table tr:hover {
+  background-color: #f5f5f5;
+}
+
+.note {
+  color: #666;
+  font-style: italic;
+  margin-top: 1rem;
 }
 
 input,
@@ -70,25 +142,56 @@ button {
   font-family: inherit;
   color: #0f0f0f;
   background-color: #ffffff;
-  transition: border-color 0.25s;
+  transition: all 0.25s ease;
   box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
 }
 
 button {
   cursor: pointer;
+  margin: 0.5em;
+  min-width: 150px;
+}
+
+button.start-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+button.stop-btn {
+  background-color: #f44336;
+  color: white;
 }
 
 button:hover {
   border-color: #396cd8;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-input,
-button {
+button.start-btn:hover {
+  background-color: #3e8e41;
+}
+
+button.stop-btn:hover {
+  background-color: #d32f2f;
+}
+
+button:active {
+  border-color: #396cd8;
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+input {
+  margin-bottom: 0.5em;
+  width: 300px;
+  max-width: 100%;
   outline: none;
+}
+
+input:focus {
+  border-color: #396cd8;
+  box-shadow: 0 0 0 2px rgba(57, 108, 216, 0.2);
 }
 
 #greet-input {

@@ -6,15 +6,19 @@ use std::{
 use rdev::{listen, Event, EventType, Key};
 use tauri::{Manager, State};
 
-use crate::{EventSender, InputEvent, ModifierState};
+use crate::{EventSender, InputEvent, ModifierState, TaskData, TaskDataState};
 
 #[tauri::command]
 pub fn stop_monitoring(
     event_sender: State<'_, EventSender>,
     modifier_state: State<'_, ModifierState>,
-) {
+    task_data: State<'_, TaskDataState>,
+) -> Option<TaskData> {
     *event_sender.lock().unwrap() = None;
     modifier_state.lock().unwrap().clear();
+    let mut task_data_guard = task_data.lock().unwrap();
+    let result = task_data_guard.take();
+    result
 }
 
 #[tauri::command(async)]
@@ -22,21 +26,35 @@ pub async fn start_monitoring(
     app: tauri::AppHandle,
     event_sender: State<'_, EventSender>,
     modifier_state: State<'_, ModifierState>,
+    task_data: State<'_, TaskDataState>,
+    task_name: String,
 ) -> Result<String, String> {
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.hide();
     }
+
+    let mut task_data_guard = task_data.lock().unwrap();
+    *task_data_guard = Some(TaskData {
+        name: task_name,
+        data: Vec::new(),
+    });
+    drop(task_data_guard);
+
     let (tx, rx): (Sender<InputEvent>, Receiver<InputEvent>) = mpsc::channel();
 
     *event_sender.lock().unwrap() = Some(tx);
 
     let sender_clone = event_sender.inner().clone();
     let modifier_state_clone = modifier_state.inner().clone();
+    let task_data_clone = task_data.inner().clone();
 
     // Spawn the event printer thread first
     thread::spawn(move || {
         for event in rx {
             println!("Event: {:?}", event);
+            if let Some(ref mut td) = &mut *task_data_clone.lock().unwrap() {
+                td.data.push(event);
+            }
         }
     });
 

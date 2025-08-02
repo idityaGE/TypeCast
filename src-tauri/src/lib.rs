@@ -6,7 +6,6 @@ use std::{
     sync::{mpsc::Sender, Arc, Mutex},
 };
 
-use commands::*;
 use serde::{Deserialize, Serialize};
 use setup::get_setup_handler;
 
@@ -23,8 +22,15 @@ pub struct InputEvent {
     pub timestamp: u128,
 }
 
+#[derive(Default, Serialize, Deserialize, Debug)]
+pub struct TaskData {
+    pub name: String,
+    pub data: Vec<InputEvent>,
+}
+
 pub type EventSender = Arc<Mutex<Option<Sender<InputEvent>>>>;
 pub type ModifierState = Arc<Mutex<HashSet<String>>>;
+pub type TaskDataState = Arc<Mutex<Option<TaskData>>>;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -35,11 +41,12 @@ pub fn run() {
     builder
         .manage(EventSender::new(Mutex::new(None)))
         .manage(ModifierState::new(Mutex::new(HashSet::new())))
+        .manage(TaskDataState::new(Mutex::new(None)))
         .setup(setup_handler)
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
-            start_monitoring,
-            stop_monitoring
+            commands::monitoring::start_monitoring,
+            commands::monitoring::stop_monitoring
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
