@@ -1,4 +1,7 @@
 use std::{
+    fs::{self, File},
+    io::{BufWriter, Write},
+    path::Path,
     sync::mpsc::{self, Receiver, Sender},
     thread,
 };
@@ -8,17 +11,35 @@ use tauri::{Manager, State};
 
 use crate::{EventSender, InputEvent, ModifierState, TaskData, TaskDataState};
 
+fn create_dir_if_not_exists(path: &str) {
+    let path = Path::new(path);
+    match fs::create_dir_all(path) {
+        Ok(_) => println!("Folder created successfully!"),
+        Err(e) => eprintln!("Error creating folder: {}", e),
+    }
+}
+
 #[tauri::command]
 pub fn stop_monitoring(
     event_sender: State<'_, EventSender>,
     modifier_state: State<'_, ModifierState>,
     task_data: State<'_, TaskDataState>,
-) -> Option<TaskData> {
+) -> Result<String, String> {
     *event_sender.lock().unwrap() = None;
     modifier_state.lock().unwrap().clear();
     let mut task_data_guard = task_data.lock().unwrap();
     let result = task_data_guard.take();
-    result
+    if let Some(data) = result {
+        let path = format!("data/{}.json", data.name);
+        create_dir_if_not_exists("data");
+        let file = File::create_new(path).expect("file already exitss");
+        let mut writter = BufWriter::new(file);
+
+        let content = serde_json::to_string(&data).expect("Failed to serialize the data");
+        writeln!(writter, "{}", content).expect("Failed to write to file");
+        writter.flush().expect("flush failed");
+    }
+    Ok(String::from("Success"))
 }
 
 #[tauri::command(async)]
@@ -48,7 +69,6 @@ pub async fn start_monitoring(
     let modifier_state_clone = modifier_state.inner().clone();
     let task_data_clone = task_data.inner().clone();
 
-    // Spawn the event printer thread first
     thread::spawn(move || {
         for event in rx {
             println!("Event: {:?}", event);
@@ -58,7 +78,6 @@ pub async fn start_monitoring(
         }
     });
 
-    // Spawn the input listener thread
     thread::spawn(move || {
         let callback = move |event: Event| {
             let modifiers: Vec<String> = {

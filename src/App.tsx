@@ -3,44 +3,41 @@ import { invoke } from "@tauri-apps/api/core";
 
 import "./App.css";
 import { useEffect, useState } from "react";
+import TitleBar from "./components/title-bar";
 
-interface InputEvent {
-  event_type: string;
-  x?: number;
-  y?: number;
-  key?: string;
-  button?: string;
-  modifiers: string[];
-  active_app?: string;
-  active_window_title?: string;
-  timestamp: number;
-}
+// interface InputEvent {
+//   event_type: string;
+//   x?: number;
+//   y?: number;
+//   key?: string;
+//   button?: string;
+//   modifiers: string[];
+//   active_app?: string;
+//   active_window_title?: string;
+//   timestamp: number;
+// }
 
-interface TaskData {
-  name: string;
-  data: InputEvent[];
-}
+// interface TaskData {
+//   name: string;
+//   data: InputEvent[];
+// }
 
 function App() {
   const [taskName, setTaskName] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [unlisten, setUnlisten] = useState<(() => void) | null>(null);
-  const [taskData, setTaskData] = useState<TaskData | null>(null);
-  const [eventCounts, setEventCounts] = useState<Record<string, number>>({});
 
   const startMonitoring = async () => {
     if (!taskName.trim()) {
       alert("Please enter a task name");
       return;
     }
-    
+
     try {
-      const response = await invoke("start_monitoring", { taskName });
-      console.log("Monitoring started successfully:", response);
+      await invoke("start_monitoring", { taskName });
       setIsMonitoring(true);
-      setTaskData(null);
-      
+
       if (!isListening) {
         const unlistenFn = await listenForStopMonitoring();
         setUnlisten(() => unlistenFn);
@@ -50,22 +47,12 @@ function App() {
       console.error("Error starting monitoring:", error);
     }
   }
-  
+
   const stopMonitoring = async () => {
     try {
-      const data = await invoke<TaskData | null>("stop_monitoring");
-      console.log("Monitoring stopped successfully:", data);
-      setTaskData(data);
+      const result = await invoke("stop_monitoring");
+      console.log("Monitoring stopped successfully:", result);
       setIsMonitoring(false);
-      
-      // Calculate event type counts
-      if (data && data.data) {
-        const counts: Record<string, number> = {};
-        data.data.forEach(event => {
-          counts[event.event_type] = (counts[event.event_type] || 0) + 1;
-        });
-        setEventCounts(counts);
-      }
     } catch (error) {
       console.error("Error stopping monitoring:", error);
     }
@@ -87,93 +74,32 @@ function App() {
     };
   }, [unlisten]);
 
-  // Format timestamp to a readable date/time
-  const formatTimestamp = (timestamp: number): string => {
-    const date = new Date(timestamp);
-    return date.toLocaleString();
-  };
-
   return (
-    <main className="container">
-      <h1>Task Monitoring App</h1>
-      
-      <div className="monitoring-controls">
-        <input
-          type="text"
-          placeholder="Enter task name"
-          value={taskName}
-          onChange={(e) => setTaskName(e.target.value)}
-          disabled={isMonitoring}
-        />
-        <br />
-        {isMonitoring ? (
-          <button className="stop-btn" onClick={stopMonitoring}>Stop Monitoring</button>
-        ) : (
-          <button className="start-btn" onClick={startMonitoring}>Start Monitoring</button>
-        )}
-      </div>
+    <main className="bg-white/50 backdrop-blur-md rounded-lg shadow-lg overflow-hidden w-full h-screen border-8 border-gray-400">
+      <TitleBar />
 
-      {taskData && (
-        <div className="results-container">
-          <h2>Task Results: {taskData.name}</h2>
-          
-          <div className="summary">
-            <h3>Summary</h3>
-            <div className="event-counts">
-              {Object.entries(eventCounts).map(([type, count]) => (
-                <div className="event-count" key={type}>
-                  <span className="event-type">{type}:</span> 
-                  <span className="count">{count}</span>
-                </div>
-              ))}
-            </div>
-            <p>Total events recorded: {taskData.data.length}</p>
-            {taskData.data.length > 0 && (
-              <p>
-                Time period: {formatTimestamp(taskData.data[0].timestamp)} to {' '}
-                {formatTimestamp(taskData.data[taskData.data.length - 1].timestamp)}
-              </p>
-            )}
-          </div>
-          
-          <h3>Event Details</h3>
-          <div className="event-list">
-            {taskData.data.length > 0 ? (
-              <table className="events-table">
-                <thead>
-                  <tr>
-                    <th>Time</th>
-                    <th>Event Type</th>
-                    <th>Details</th>
-                    <th>Modifiers</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {taskData.data.slice(0, 100).map((event, index) => (
-                    <tr key={index}>
-                      <td>{formatTimestamp(event.timestamp)}</td>
-                      <td>{event.event_type}</td>
-                      <td>
-                        {event.key && <span>Key: {event.key}</span>}
-                        {event.button && <span>Button: {event.button}</span>}
-                        {(event.x !== undefined && event.y !== undefined) && 
-                          <span>Position: ({event.x.toFixed(0)}, {event.y.toFixed(0)})</span>
-                        }
-                      </td>
-                      <td>{event.modifiers.join(', ')}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <p>No events recorded</p>
-            )}
-            {taskData.data.length > 100 && (
-              <p className="note">Showing first 100 events of {taskData.data.length}</p>
-            )}
-          </div>
+      <div className="pt-20 flex flex-col items-center justify-center space-y-6">
+        <div className="flex flex-col items-center space-y-4">
+          <input
+            type="text"
+            placeholder="task name"
+            value={taskName}
+            onChange={(e) => setTaskName(e.target.value)}
+            disabled={isMonitoring}
+            className="bg-transparent border-b-2 border-cyan-400 text-center text-lg placeholder-gray-400 focus:outline-none focus:border-cyan-300 disabled:opacity-50 pb-2"
+          />
+
+          <button
+            className={`w-20 h-20 rounded-full font-medium text-sm transition-all duration-300 ${isMonitoring
+              ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg hover:shadow-red-500/25'
+              : 'bg-cyan-400 hover:bg-cyan-500 text-white shadow-lg hover:shadow-cyan-400/25'
+              }`}
+            onClick={isMonitoring ? stopMonitoring : startMonitoring}
+          >
+            {isMonitoring ? 'STOP' : 'START'}
+          </button>
         </div>
-      )}
+      </div>
     </main>
   );
 }
