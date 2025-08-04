@@ -75,29 +75,37 @@ function App() {
   }, [unlisten]);
 
   return (
-    <main className="bg-white/50 backdrop-blur-md rounded-lg shadow-lg overflow-hidden w-full h-screen border-8 border-gray-400">
-      <TitleBar />
+    <main className="bg-white/40 backdrop-blur-md rounded-lg shadow-lg overflow-hidden w-full h-screen border-8 border-gray-400">
+      <div>
+        <TitleBar />
 
-      <div className="pt-20 flex flex-col items-center justify-center space-y-6">
-        <div className="flex flex-col items-center space-y-4">
-          <input
-            type="text"
-            placeholder="task name"
-            value={taskName}
-            onChange={(e) => setTaskName(e.target.value)}
-            disabled={isMonitoring}
-            className="bg-transparent border-b-2 border-cyan-400 text-center text-lg placeholder-gray-400 focus:outline-none focus:border-cyan-300 disabled:opacity-50 pb-2"
-          />
+        <div className="pt-20 flex flex-col items-center justify-center space-y-6">
+          <div className="flex flex-col items-center space-y-4">
+            <input
+              type="text"
+              placeholder="task name"
+              value={taskName}
+              onChange={(e) => setTaskName(e.target.value)}
+              disabled={isMonitoring}
+              className="border-2 border-gray-400 rounded-md p-2 w-80 text-zinc-800 focus:outline-none focus:border-gray-600 transition-colors duration-200"
+            />
 
-          <button
-            className={`w-20 h-20 rounded-full font-medium text-sm transition-all duration-300 ${isMonitoring
-              ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg hover:shadow-red-500/25'
-              : 'bg-cyan-400 hover:bg-cyan-500 text-white shadow-lg hover:shadow-cyan-400/25'
-              }`}
-            onClick={isMonitoring ? stopMonitoring : startMonitoring}
-          >
-            {isMonitoring ? 'STOP' : 'START'}
-          </button>
+            <button
+              className={`w-40 h-12 rounded-md font-medium text-sm tracking-wide transition-all duration-300 ${isMonitoring
+                ? 'bg-zinc-200 hover:bg-zinc-300 text-zinc-800 border border-zinc-300 shadow-sm hover:shadow-md'
+                : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border border-zinc-200 shadow-sm hover:shadow-md'
+                }`}
+              onClick={isMonitoring ? stopMonitoring : startMonitoring}
+            >
+              {isMonitoring ? 'STOP' : 'START'}
+            </button>
+          </div>
+
+          {isMonitoring && (
+            <div className="text-sm text-zinc-600">
+              Monitoring: {taskName}
+            </div>
+          )}
         </div>
       </div>
     </main>
