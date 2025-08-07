@@ -46,51 +46,6 @@ pub async fn start_monitoring(
             };
 
             let input_event = match event.event_type {
-                EventType::MouseMove { x, y } => Some(InputEvent {
-                    event_type: "mouse_move".to_string(),
-                    x: Some(x),
-                    y: Some(y),
-                    key: None,
-                    button: None,
-                    modifiers: modifiers.clone(),
-                    active_app: None,
-                    active_window_title: None,
-                    timestamp: event
-                        .time
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .unwrap()
-                        .as_millis(),
-                }),
-                EventType::ButtonPress(button) => Some(InputEvent {
-                    event_type: "mouse_press".to_string(),
-                    x: None,
-                    y: None,
-                    key: None,
-                    button: Some(format!("{:?}", button)),
-                    modifiers: modifiers.clone(),
-                    active_app: None,
-                    active_window_title: None,
-                    timestamp: event
-                        .time
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .unwrap()
-                        .as_millis(),
-                }),
-                EventType::ButtonRelease(button) => Some(InputEvent {
-                    event_type: "mouse_release".to_string(),
-                    x: None,
-                    y: None,
-                    key: None,
-                    button: Some(format!("{:?}", button)),
-                    modifiers: modifiers.clone(),
-                    active_app: None,
-                    active_window_title: None,
-                    timestamp: event
-                        .time
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .unwrap()
-                        .as_millis(),
-                }),
                 EventType::KeyPress(key) => {
                     let key_str = format!("{:?}", key);
 
@@ -118,13 +73,8 @@ pub async fn start_monitoring(
 
                     Some(InputEvent {
                         event_type: "key_press".to_string(),
-                        x: None,
-                        y: None,
                         key: Some(key_str),
-                        button: None,
                         modifiers: modifiers.clone(),
-                        active_app: None,
-                        active_window_title: None,
                         timestamp: std::time::SystemTime::now()
                             .duration_since(std::time::UNIX_EPOCH)
                             .unwrap()
@@ -158,34 +108,15 @@ pub async fn start_monitoring(
 
                     Some(InputEvent {
                         event_type: "key_release".to_string(),
-                        x: None,
-                        y: None,
                         key: Some(key_str),
-                        button: None,
                         modifiers: modifiers.clone(),
-                        active_app: None,
-                        active_window_title: None,
                         timestamp: std::time::SystemTime::now()
                             .duration_since(std::time::UNIX_EPOCH)
                             .unwrap()
                             .as_millis(),
                     })
                 }
-                EventType::Wheel { delta_x, delta_y } => Some(InputEvent {
-                    event_type: "wheel".to_string(),
-                    x: Some(delta_x as f64),
-                    y: Some(delta_y as f64),
-                    key: None,
-                    button: None,
-                    modifiers: modifiers.clone(),
-                    active_app: None,
-                    active_window_title: None,
-                    timestamp: event
-                        .time
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .unwrap()
-                        .as_millis(),
-                }),
+                _ => None,
             };
 
             if let Some(input_event) = input_event {

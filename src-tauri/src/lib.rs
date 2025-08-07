@@ -12,13 +12,8 @@ use setup::get_setup_handler;
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct InputEvent {
     pub event_type: String,
-    pub x: Option<f64>,
-    pub y: Option<f64>,
     pub key: Option<String>,
-    pub button: Option<String>,
     pub modifiers: Vec<String>,
-    pub active_app: Option<String>,
-    pub active_window_title: Option<String>,
     pub timestamp: u128,
 }
 
