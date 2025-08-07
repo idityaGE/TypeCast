@@ -21,6 +21,13 @@ pub fn setup_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>
 }
 
 fn get_menu(app: &tauri::App) -> Result<Menu<tauri::Wry>, Box<dyn std::error::Error>> {
+    let start = MenuItem::with_id(
+        app,
+        "start_monitoring",
+        "Start Monitoring",
+        true,
+        None::<&str>,
+    )?;
     let stop = MenuItem::with_id(
         app,
         "stop_monitoring",
@@ -31,6 +38,7 @@ fn get_menu(app: &tauri::App) -> Result<Menu<tauri::Wry>, Box<dyn std::error::Er
     let quit = MenuItem::with_id(app, "quit", "Quit App", true, None::<&str>)?;
 
     let menu = MenuBuilder::new(app)
+        .item(&start)
         .item(&stop)
         .separator()
         .item(&quit)
@@ -41,12 +49,16 @@ fn get_menu(app: &tauri::App) -> Result<Menu<tauri::Wry>, Box<dyn std::error::Er
 
 fn get_menu_event_handler() -> impl Fn(&AppHandle, MenuEvent) {
     |app: &AppHandle, event: MenuEvent| match event.id.as_ref() {
+        "start_monitoring" => {
+            println!("Start is Clicked");
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.emit("start_monitoring", ());
+            }
+        }
         "stop_monitoring" => {
             println!("Stop is clicked");
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.emit("stop_monitoring", ());
-                let _ = window.show();
-                let _ = window.set_focus();
             }
         }
         "quit" => {

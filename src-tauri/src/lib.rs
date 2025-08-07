@@ -22,15 +22,8 @@ pub struct InputEvent {
     pub timestamp: u128,
 }
 
-#[derive(Default, Serialize, Deserialize, Debug)]
-pub struct TaskData {
-    pub name: String,
-    pub data: Vec<InputEvent>,
-}
-
 pub type EventSender = Arc<Mutex<Option<Sender<InputEvent>>>>;
 pub type ModifierState = Arc<Mutex<HashSet<String>>>;
-pub type TaskDataState = Arc<Mutex<Option<TaskData>>>;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -41,7 +34,6 @@ pub fn run() {
     builder
         .manage(EventSender::new(Mutex::new(None)))
         .manage(ModifierState::new(Mutex::new(HashSet::new())))
-        .manage(TaskDataState::new(Mutex::new(None)))
         .setup(setup_handler)
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
