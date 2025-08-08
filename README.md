@@ -12,6 +12,9 @@ TypeCast is a lightweight, cross‑platform desktop overlay that shows your keys
   <em>Minimal overlay showing recent keys with modifier caps</em>
 </div>
 
+## Demo
+https://github.com/user-attachments/assets/6d024955-4df3-4384-a7e4-16c5719c783a
+
 ---
 
 ## Features
