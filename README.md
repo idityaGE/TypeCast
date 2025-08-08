@@ -1,3 +1,7 @@
+<p align="center">
+<img src="./src-tauri/icons/icon.png" width="200" height="200" />
+</p>
+
 # TypeCast — Keystroke visualizer for screen recording
 
 TypeCast is a lightweight, cross‑platform desktop overlay that shows your keystrokes while you record or present. Built with Tauri (Rust + React), it stays always‑on‑top, is click‑through, and appears on all workspaces without getting in your way.
@@ -9,7 +13,9 @@ TypeCast is a lightweight, cross‑platform desktop overlay that shows your keys
 </div>
 
 <p align="center">
-  <video src="https://github.com/idityaGE/TypeCast/raw/refs/heads/main/assets/TypeCast-demo.mp4" controls width="720"></video>
+  <video src="https://github.com/idityaGE/tauri-logger/raw/HEAD/assets/TypeCast-demo.mp4" controls width="720"></video>
+  <br/>
+  <a href="https://github.com/idityaGE/tauri-logger/raw/HEAD/assets/TypeCast-demo.mp4">Download/Watch demo</a>
 </p>
 
 ---
@@ -43,6 +49,7 @@ TypeCast is a lightweight, cross‑platform desktop overlay that shows your keys
   - Auto‑hides after 5s of inactivity; re‑shows on the next key press
 
 Window behavior (from `src-tauri/tauri.conf.json`):
+
 - `alwaysOnTop: true`, `visibleOnAllWorkspaces: true`, `transparent: true`, `decorations: false`
 - `fullscreen: true`, `skipTaskbar: true`, click‑through is enabled in setup via `set_ignore_cursor_events(true)`
 
