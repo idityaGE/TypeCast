@@ -48,7 +48,6 @@ function App() {
 
     const setup = async () => {
       try {
-        // Single global key-logger listener (lifetime of component)
         if (!unlistenKeyLoggerRef.current) {
           const unlisten = await listen("key-logger", (event) => {
             if (!isListeningRef.current) return;
@@ -61,12 +60,10 @@ function App() {
           if (!disposed) {
             unlistenKeyLoggerRef.current = unlisten;
           } else {
-            // component unmounted before listen resolved
             unlisten();
           }
         }
 
-        // Tray start/stop events
         const startUnlisten = await listen("start_monitoring", async () => {
           await startMonitoring();
         });
