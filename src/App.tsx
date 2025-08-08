@@ -14,11 +14,13 @@ interface InputEvent {
 function App() {
   const [keyEvents, setKeyEvents] = useState<InputEvent[]>([]);
   const [isListening, setIsListening] = useState(false);
+  const [visible, setVisible] = useState(false);
 
   const isListeningRef = useRef(false);
   const unlistenKeyLoggerRef = useRef<(() => void) | null>(null);
   const unlistenStartEventRef = useRef<(() => void) | null>(null);
   const unlistenStopEventRef = useRef<(() => void) | null>(null);
+  const hideTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     isListeningRef.current = isListening;
@@ -28,6 +30,7 @@ function App() {
     try {
       await invoke("start_monitoring");
       setIsListening(true);
+      setVisible(false);
     } catch (error) {
       console.error("Error starting monitoring:", error);
     }
@@ -38,6 +41,7 @@ function App() {
       await invoke("stop_monitoring");
       setKeyEvents([]);
       setIsListening(false);
+      setVisible(false);
     } catch (error) {
       console.error("Error stopping monitoring:", error);
     }
@@ -54,7 +58,17 @@ function App() {
 
             const newEvent = event.payload as InputEvent;
             if (newEvent.event_type === "key_press") {
-              setKeyEvents((prev) => [...prev.slice(-9), newEvent]);
+              setKeyEvents((prev) => {
+                const next = [...prev.slice(-9), newEvent];
+                return next;
+              });
+              setVisible(true);
+              if (hideTimerRef.current) {
+                window.clearTimeout(hideTimerRef.current);
+              }
+              hideTimerRef.current = window.setTimeout(() => {
+                setVisible(false);
+              }, 5000);
             }
           });
           if (!disposed) {
@@ -99,6 +113,10 @@ function App() {
         unlistenStopEventRef.current();
         unlistenStopEventRef.current = null;
       }
+      if (hideTimerRef.current) {
+        window.clearTimeout(hideTimerRef.current);
+        hideTimerRef.current = null;
+      }
     };
   }, []);
 
@@ -111,8 +129,8 @@ function App() {
       <div
         key={`${event.timestamp}-${index}`}
         className={`
-          flex items-center gap-2 transition-all duration-300
-          ${isLatest ? 'scale-110' : 'opacity-75'}
+          flex items-center gap-2 transition-all duration-300 key-row
+          ${isLatest ? 'scale-105 latest' : 'opacity-80'}
         `}
       >
         {hasModifiers && (
@@ -120,7 +138,7 @@ function App() {
             {event.modifiers.map((modifier, modIndex) => (
               <div
                 key={modIndex}
-                className="px-2 py-1 bg-white/10 backdrop-blur-sm rounded text-md font-medium text-white/80"
+                className="keycap keycap-mod"
               >
                 {modifier}
               </div>
@@ -130,9 +148,8 @@ function App() {
         )}
 
         <div className={`
-          px-3 py-2 bg-white/15 backdrop-blur-sm rounded-lg font-mono font-bold text-lg text-white
-          min-w-[45px] text-center border border-white/20
-          ${isLatest ? 'bg-white/25 border-white/40 shadow-lg' : ''}
+          keycap keycap-main font-mono font-bold text-lg
+          ${isLatest ? 'keycap-glow' : ''}
         `}>
           {key}
         </div>
@@ -143,11 +160,13 @@ function App() {
   return (
     <main className="w-full h-screen bg-transparent pointer-events-none">
       {keyEvents.length > 0 && (
-        <div className="fixed bottom-6 right-6">
-          <div className="flex flex-col gap-3">
-            {keyEvents.slice(-9).map((event, index) =>
-              renderKeyBox(event, index)
-            )}
+        <div
+          className={`fixed bottom-6 right-6 transition-all duration-300 ease-out
+            ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
+          `}
+        >
+          <div className="flex flex-col justify-end items-end gap-2">
+            {keyEvents.slice(-9).map((event, index) => renderKeyBox(event, index))}
           </div>
         </div>
       )}

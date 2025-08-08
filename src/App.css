@@ -1,1 +1,30 @@
 @import "tailwindcss";
+
+/* Base styles for keycaps */
+.keycap {
+  @apply px-3 py-2 rounded-md shadow-lg backdrop-blur-sm text-center;
+  @apply bg-gray-800/70 text-white border border-gray-700/50;
+}
+
+.keycap-main {
+  @apply bg-gray-800/80 px-4 py-2;
+  @apply border border-gray-600/50;
+}
+
+.keycap-mod {
+  @apply bg-gray-700/70 text-sm uppercase text-gray-300;
+}
+
+/* Removed glow effect */
+.keycap-glow {
+  @apply ring-1 ring-gray-600/50;
+}
+
+/* Key row animations */
+.key-row {
+  @apply transition-all duration-300;
+}
+
+.latest {
+  @apply scale-105;
+}
