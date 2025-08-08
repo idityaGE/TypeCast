@@ -125,7 +125,7 @@ fn get_key_string(key: Key) -> Option<String> {
         Key::Delete => Some("⌦".to_string()),
         Key::DownArrow => Some("↓".to_string()),
         Key::End => Some("End".to_string()),
-        Key::Escape => Some("⎋".to_string()),
+        Key::Escape => Some("esc".to_string()),
         Key::F1 => Some("F1".to_string()),
         Key::F2 => Some("F2".to_string()),
         Key::F3 => Some("F3".to_string()),
@@ -218,6 +218,7 @@ fn get_key_string(key: Key) -> Option<String> {
         Key::Kp8 => Some("8".to_string()),
         Key::Kp9 => Some("9".to_string()),
         Key::Function => Some("Fn".to_string()),
+        Key::BackSlash => Some("'\'".to_string()),
         Key::Unknown(_) => None,
         _ => None,
     }

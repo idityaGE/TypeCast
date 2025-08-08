@@ -1,8 +1,7 @@
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-
-import "./App.css";
 import { useEffect, useRef, useState } from "react";
+import "./App.css";
 
 interface InputEvent {
   event_type: string;
@@ -17,9 +16,15 @@ function App() {
   const [visible, setVisible] = useState(false);
 
   const isListeningRef = useRef(false);
-  const unlistenKeyLoggerRef = useRef<(() => void) | null>(null);
-  const unlistenStartEventRef = useRef<(() => void) | null>(null);
-  const unlistenStopEventRef = useRef<(() => void) | null>(null);
+  const unlistenRefs = useRef<{
+    keyLogger: (() => void) | null;
+    startEvent: (() => void) | null;
+    stopEvent: (() => void) | null;
+  }>({
+    keyLogger: null,
+    startEvent: null,
+    stopEvent: null
+  });
   const hideTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -50,45 +55,32 @@ function App() {
   useEffect(() => {
     let disposed = false;
 
-    const setup = async () => {
+    const setupEventListeners = async () => {
       try {
-        if (!unlistenKeyLoggerRef.current) {
-          const unlisten = await listen("key-logger", (event) => {
-            if (!isListeningRef.current) return;
+        const keyLoggerUnlisten = await listen("key-logger", (event) => {
+          if (!isListeningRef.current) return;
 
-            const newEvent = event.payload as InputEvent;
-            if (newEvent.event_type === "key_press") {
-              setKeyEvents((prev) => {
-                const next = [...prev.slice(-9), newEvent];
-                return next;
-              });
-              setVisible(true);
-              if (hideTimerRef.current) {
-                window.clearTimeout(hideTimerRef.current);
-              }
-              hideTimerRef.current = window.setTimeout(() => {
-                setVisible(false);
-              }, 5000);
-            }
-          });
-          if (!disposed) {
-            unlistenKeyLoggerRef.current = unlisten;
-          } else {
-            unlisten();
+          const newEvent = event.payload as InputEvent;
+          if (newEvent.event_type === "key_press") {
+            setKeyEvents((prev) => [...prev.slice(-9), newEvent]);
+            setVisible(true);
+
+            if (hideTimerRef.current) window.clearTimeout(hideTimerRef.current);
+            hideTimerRef.current = window.setTimeout(() => setVisible(false), 5000);
           }
-        }
+        });
 
-        const startUnlisten = await listen("start_monitoring", async () => {
-          await startMonitoring();
-        });
-        const stopUnlisten = await listen("stop_monitoring", async () => {
-          await stopMonitoring();
-        });
+        const startUnlisten = await listen("start_monitoring", startMonitoring);
+        const stopUnlisten = await listen("stop_monitoring", stopMonitoring);
 
         if (!disposed) {
-          unlistenStartEventRef.current = startUnlisten;
-          unlistenStopEventRef.current = stopUnlisten;
+          unlistenRefs.current = {
+            keyLogger: keyLoggerUnlisten,
+            startEvent: startUnlisten,
+            stopEvent: stopUnlisten
+          };
         } else {
+          keyLoggerUnlisten();
           startUnlisten();
           stopUnlisten();
         }
@@ -97,22 +89,11 @@ function App() {
       }
     };
 
-    setup();
+    setupEventListeners();
 
     return () => {
       disposed = true;
-      if (unlistenKeyLoggerRef.current) {
-        unlistenKeyLoggerRef.current();
-        unlistenKeyLoggerRef.current = null;
-      }
-      if (unlistenStartEventRef.current) {
-        unlistenStartEventRef.current();
-        unlistenStartEventRef.current = null;
-      }
-      if (unlistenStopEventRef.current) {
-        unlistenStopEventRef.current();
-        unlistenStopEventRef.current = null;
-      }
+      Object.values(unlistenRefs.current).forEach(unlisten => unlisten?.());
       if (hideTimerRef.current) {
         window.clearTimeout(hideTimerRef.current);
         hideTimerRef.current = null;
@@ -122,35 +103,25 @@ function App() {
 
   const renderKeyBox = (event: InputEvent, index: number) => {
     const isLatest = index === keyEvents.length - 1;
-    const key = event.key ? event.key : 'unknown';
+    const key = event.key || 'unknown';
     const hasModifiers = event.modifiers.length > 0;
 
     return (
       <div
         key={`${event.timestamp}-${index}`}
-        className={`
-          flex items-center gap-2 transition-all duration-300 key-row
-          ${isLatest ? 'scale-105 latest' : 'opacity-80'}
-        `}
+        className={`flex items-center gap-2 key-row ${isLatest ? 'latest' : 'opacity-80'}`}
       >
         {hasModifiers && (
           <>
             {event.modifiers.map((modifier, modIndex) => (
-              <div
-                key={modIndex}
-                className="keycap keycap-mod"
-              >
+              <div key={modIndex} className="keycap keycap-mod">
                 {modifier}
               </div>
             ))}
             <span className="text-white/60 text-md">+</span>
           </>
         )}
-
-        <div className={`
-          keycap keycap-main font-mono font-bold text-lg
-          ${isLatest ? 'keycap-glow' : ''}
-        `}>
+        <div className={`keycap keycap-main font-mono font-bold text-lg ${isLatest ? 'keycap-glow' : ''}`}>
           {key}
         </div>
       </div>
@@ -162,11 +133,10 @@ function App() {
       {keyEvents.length > 0 && (
         <div
           className={`fixed bottom-6 right-6 transition-all duration-300 ease-out
-            ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
-          `}
+            ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}
         >
           <div className="flex flex-col justify-end items-end gap-2">
-            {keyEvents.slice(-9).map((event, index) => renderKeyBox(event, index))}
+            {keyEvents.map(renderKeyBox)}
           </div>
         </div>
       )}
