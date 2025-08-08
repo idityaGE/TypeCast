@@ -13,6 +13,7 @@
     "windows": [
       {
         "title": "task-monitor",
+        "label": "main",
         "width": 800,
         "height": 600,
         "decorations": false,
@@ -20,7 +21,10 @@
         "alwaysOnTop": true,
         "fullscreen": true,
         "skipTaskbar": true,
-        "visibleOnAllWorkspaces": true
+        "visibleOnAllWorkspaces": true,
+        "minimizable": false,
+        "maximizable": false,
+        "focus": false
       }
     ],
     "security": {

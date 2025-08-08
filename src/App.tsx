@@ -2,7 +2,7 @@ import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 
 import "./App.css";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface InputEvent {
   event_type: string;
@@ -14,26 +14,20 @@ interface InputEvent {
 function App() {
   const [keyEvents, setKeyEvents] = useState<InputEvent[]>([]);
   const [isListening, setIsListening] = useState(false);
-  const [unlistenKeyLogger, setUnlistenKeyLogger] = useState<(() => void) | null>(null);
-  const [unlistenStartEvent, setUnlistenStartEvent] = useState<(() => void) | null>(null);
-  const [unlistenStopEvent, setUnlistenStopEvent] = useState<(() => void) | null>(null);
+
+  const isListeningRef = useRef(false);
+  const unlistenKeyLoggerRef = useRef<(() => void) | null>(null);
+  const unlistenStartEventRef = useRef<(() => void) | null>(null);
+  const unlistenStopEventRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    isListeningRef.current = isListening;
+  }, [isListening]);
 
   const startMonitoring = async () => {
     try {
       await invoke("start_monitoring");
-
-      if (!isListening) {
-        const keyLoggerUnlisten = await listen("key-logger", (event) => {
-          const newEvent = event.payload as InputEvent;
-
-          if (newEvent.event_type === "key_press") {
-            setKeyEvents((prevEvents) => [...prevEvents.slice(-9), newEvent]);
-          }
-        });
-        setUnlistenKeyLogger(() => keyLoggerUnlisten);
-
-        setIsListening(true);
-      }
+      setIsListening(true);
     } catch (error) {
       console.error("Error starting monitoring:", error);
     }
@@ -43,11 +37,6 @@ function App() {
     try {
       await invoke("stop_monitoring");
       setKeyEvents([]);
-      if (unlistenKeyLogger) {
-        unlistenKeyLogger();
-        setUnlistenKeyLogger(null);
-      }
-
       setIsListening(false);
     } catch (error) {
       console.error("Error stopping monitoring:", error);
@@ -55,34 +44,63 @@ function App() {
   };
 
   useEffect(() => {
-    const setupEventListeners = async () => {
+    let disposed = false;
+
+    const setup = async () => {
       try {
+        // Single global key-logger listener (lifetime of component)
+        if (!unlistenKeyLoggerRef.current) {
+          const unlisten = await listen("key-logger", (event) => {
+            if (!isListeningRef.current) return;
+
+            const newEvent = event.payload as InputEvent;
+            if (newEvent.event_type === "key_press") {
+              setKeyEvents((prev) => [...prev.slice(-9), newEvent]);
+            }
+          });
+          if (!disposed) {
+            unlistenKeyLoggerRef.current = unlisten;
+          } else {
+            // component unmounted before listen resolved
+            unlisten();
+          }
+        }
+
+        // Tray start/stop events
         const startUnlisten = await listen("start_monitoring", async () => {
           await startMonitoring();
         });
-        setUnlistenStartEvent(() => startUnlisten);
-
         const stopUnlisten = await listen("stop_monitoring", async () => {
           await stopMonitoring();
         });
-        setUnlistenStopEvent(() => stopUnlisten);
 
+        if (!disposed) {
+          unlistenStartEventRef.current = startUnlisten;
+          unlistenStopEventRef.current = stopUnlisten;
+        } else {
+          startUnlisten();
+          stopUnlisten();
+        }
       } catch (error) {
         console.error("Error setting up event listeners:", error);
       }
     };
 
-    setupEventListeners();
+    setup();
 
     return () => {
-      if (unlistenKeyLogger) {
-        unlistenKeyLogger();
+      disposed = true;
+      if (unlistenKeyLoggerRef.current) {
+        unlistenKeyLoggerRef.current();
+        unlistenKeyLoggerRef.current = null;
       }
-      if (unlistenStartEvent) {
-        unlistenStartEvent();
+      if (unlistenStartEventRef.current) {
+        unlistenStartEventRef.current();
+        unlistenStartEventRef.current = null;
       }
-      if (unlistenStopEvent) {
-        unlistenStopEvent();
+      if (unlistenStopEventRef.current) {
+        unlistenStopEventRef.current();
+        unlistenStopEventRef.current = null;
       }
     };
   }, []);
@@ -97,7 +115,7 @@ function App() {
       'Digit0': '0', 'Digit1': '1', 'Digit2': '2', 'Digit3': '3', 'Digit4': '4',
       'Digit5': '5', 'Digit6': '6', 'Digit7': '7', 'Digit8': '8', 'Digit9': '9',
       'Space': '⎵',
-      'Enter': '↵',
+      'Enter': '⏎',
       'Backspace': '⌫',
       'Tab': '⇥',
       'Escape': 'Esc',
@@ -110,7 +128,6 @@ function App() {
       'MetaLeft': 'Cmd',
       'MetaRight': 'Cmd',
     };
-
     return keyMap[key] || key;
   };
 
@@ -127,22 +144,20 @@ function App() {
           ${isLatest ? 'scale-110' : 'opacity-75'}
         `}
       >
-        {/* Modifier keys */}
         {hasModifiers && (
           <>
             {event.modifiers.map((modifier, modIndex) => (
               <div
                 key={modIndex}
-                className="px-2 py-1 bg-white/10 backdrop-blur-sm rounded text-xs font-medium text-white/80"
+                className="px-2 py-1 bg-white/10 backdrop-blur-sm rounded text-md font-medium text-white/80"
               >
                 {modifier}
               </div>
             ))}
-            <span className="text-white/60 text-sm">+</span>
+            <span className="text-white/60 text-md">+</span>
           </>
         )}
 
-        {/* Main key */}
         <div className={`
           px-3 py-2 bg-white/15 backdrop-blur-sm rounded-lg font-mono font-bold text-lg text-white
           min-w-[45px] text-center border border-white/20

@@ -3,7 +3,7 @@ mod setup;
 
 use std::{
     collections::HashSet,
-    sync::{mpsc::Sender, Arc, Mutex},
+    sync::{atomic::AtomicBool, Arc, Mutex},
 };
 
 use serde::{Deserialize, Serialize};
@@ -17,8 +17,8 @@ pub struct InputEvent {
     pub timestamp: u128,
 }
 
-pub type EventSender = Arc<Mutex<Option<Sender<InputEvent>>>>;
 pub type ModifierState = Arc<Mutex<HashSet<String>>>;
+pub type IsListening = Arc<AtomicBool>;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -27,7 +27,7 @@ pub fn run() {
     let setup_handler = get_setup_handler();
 
     builder
-        .manage(EventSender::new(Mutex::new(None)))
+        .manage(IsListening::new(AtomicBool::new(false)))
         .manage(ModifierState::new(Mutex::new(HashSet::new())))
         .setup(setup_handler)
         .plugin(tauri_plugin_opener::init())
