@@ -12,12 +12,6 @@ TypeCast is a lightweight, cross‑platform desktop overlay that shows your keys
   <em>Minimal overlay showing recent keys with modifier caps</em>
 </div>
 
-<p align="center">
-  <video src="https://github.com/idityaGE/tauri-logger/raw/HEAD/assets/TypeCast-demo.mp4" controls width="720"></video>
-  <br/>
-  <a href="https://github.com/idityaGE/tauri-logger/raw/HEAD/assets/TypeCast-demo.mp4">Download/Watch demo</a>
-</p>
-
 ---
 
 ## Features
